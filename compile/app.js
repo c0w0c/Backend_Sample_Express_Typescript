@@ -1,0 +1,45 @@
+﻿import { createServer } from 'node:http';
+import { logInfo, logError } from './library/log.library.js';
+import httpLibrary from './library/http.library.js';
+import { SERVER_PORT, PROJECT_NAME } from './constants.js';
+const server = createServer(httpLibrary.server);
+const startHttpAndWebsocketServer = () => new Promise((resolve, reject) => {
+    let isHttpCreateSuccess = false;
+    let startStatusCheckCount = 0;
+    server.listen(SERVER_PORT);
+    server.on('error', (error) => {
+        logError('http 服務啟動失敗');
+        return reject(error);
+    });
+    server.on('listening', () => {
+        logInfo('http 服務啟動成功');
+        isHttpCreateSuccess = true;
+    });
+    const checkInterval = setInterval(() => {
+        if (startStatusCheckCount === 6) {
+            reject(Error('伺服器啟動逾時'));
+            logInfo('isHttpCreateSuccess:', isHttpCreateSuccess);
+            clearInterval(checkInterval);
+            return;
+        }
+        if (isHttpCreateSuccess) {
+            resolve('done');
+            clearInterval(checkInterval);
+            return;
+        }
+        startStatusCheckCount += 1;
+    }, 500);
+});
+const main = async () => {
+    try {
+        await startHttpAndWebsocketServer();
+    }
+    catch (error) {
+        logError('服務啟動失敗, error:', error);
+        process.exit(0);
+    }
+    const usePort = server.address() ? server.address().port : NaN;
+    logInfo(PROJECT_NAME, '服務啟動成功, port:', usePort, ', 環境:', process.env.NODE_ENV);
+};
+main();
+export default httpLibrary.server;
