@@ -1,14 +1,5 @@
 import express, { Express, Request, json, urlencoded } from 'express';
 
-/** 使用者物件 */
-export interface IUserData {
-    id: number,
-    account: string,
-    name: string,
-    role: string,
-    realIp: string,
-}
-
 /** express 請求物件 */
 export interface IRequest extends Request {
     id?: number,
